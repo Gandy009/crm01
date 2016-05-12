@@ -1,0 +1,34 @@
+package com.atguigu.crm.services;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.atguigu.crm.mappers.OrderMapper;
+import com.atuigu.crm.entity.Order;
+import com.atuigu.crm.entity.OrderItem;
+
+@Service
+public class OrderService {
+	
+	@Autowired
+	private OrderMapper orderMapper;
+	
+	public List<Order> getHistoryOrderListById(Integer id){
+		List<Order> list = new ArrayList<Order>();
+		list = orderMapper.getHistoryOrderListById(id);
+		return list;
+
+	}
+	
+	public List<OrderItem> getHistoryOrderItemListById(Integer id){
+		List<OrderItem> list = new ArrayList<OrderItem>();
+		list = orderMapper.getHistoryOrderItemListById(id);
+		return list;
+		
+	}
+	
+	
+}

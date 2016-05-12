@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.atguigu.crm.mappers.CustomerDrainMapper">
+
+	<update id="updateReason" parameterType="com.atuigu.crm.entity.CustomerDrain">
+		UPDATE customer_drains SET reason=#{reason} WHERE id=#{id}
+	</update>
+	
+	<update id="updateDelay2" parameterType="com.atuigu.crm.entity.CustomerDrain">
+		UPDATE customer_drains SET status='流失' WHERE id=#{id}
+	</update>
+
+	<update id="updateDelay" parameterType="com.atuigu.crm.entity.CustomerDrain">
+		UPDATE customer_drains SET delay=#{delay} WHERE id=#{id}
+	</update>
+
+	<select id="getDrainById" resultType="com.atuigu.crm.entity.CustomerDrain">
+		SELECT id, delay, drain_date as "drainDate", last_order_date as "lastOrderDate", reason, status, customer_id as "customer.id" 
+		FROM customer_drains WHERE id=#{id}
+	</select>
+
+	<update id="updateState">
+		UPDATE customer_drains SET status='流失' WHERE id=#{id}
+	</update>
+
+	<sql id="queryCondition">
+		<where>
+			<if test="customerName != null">
+				customer_id = (SELECT id FROM customers WHERE name LIKE #{customerName})
+			</if>
+			<if test="customerManagerName != null">
+				AND customer_id = (SELECT distinct customer_id FROM contacts WHERE name LIKE #{customerManagerName}) 
+			</if>
+		</where>
+	</sql>
+	
+	<select id="getCustomerById" resultType="com.atuigu.crm.entity.Customer">
+		SELECT name FROM customers WHERE id=#{id}
+	</select>
+	
+	<select id="getContactById" resultType="com.atuigu.crm.entity.Contact">
+		SELECT distinct name FROM contacts WHERE customer_id=#{customer.id}
+	</select>
+
+	<select id="getTotalElements" resultType="long">
+		SELECT count(id) 
+		FROM customer_drains
+		<include refid="queryCondition"/>
+	</select>
+	
+	<select id="getContent" resultType="com.atuigu.crm.entity.CustomerDrain">
+		SELECT * FROM 
+			(SELECT rownum rn, id, delay, drain_date as "drainDate", last_order_date as "lastOrderDate", reason, status, customer_id as "customer.id" 
+			 FROM customer_drains
+			 <include refid="queryCondition"/> 
+			 ORDER BY id)
+		<![CDATA[
+		WHERE rn >= #{firstIndex} AND rn < #{endIndex}
+		]]>	 
+	</select>
+	
+</mapper>

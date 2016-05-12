@@ -1,0 +1,73 @@
+package com.atguigu.crm.services;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.atguigu.crm.mappers.CustomerMapper;
+import com.atuigu.crm.entity.Customer;
+import com.atuigu.crm.orm.Page;
+import com.atuigu.crm.orm.PropertyFilter;
+
+@Service
+public class CustomerInfoService {
+	
+	@Autowired
+	private CustomerMapper customerMapper;
+
+	public Customer get(Integer id) {
+		
+		return customerMapper.getCustomerById(id);
+	}
+
+	public void save(Customer customer) {
+		customerMapper.insertCustomer(customer);
+	}
+	
+	public Page<Customer> getPage(int pageNo, Map<String, Object> params){
+		
+		Page<Customer> page = new Page<>();
+		
+		page.setPageNo(pageNo);
+		
+		//1. 把请求参数转为 mybatis 可以使用的请求参数
+		Map<String , Object> mybatisParams = PropertyFilter.parseRequestParams2MybatisParams(params);
+		
+		//2. 查询 totalElements
+		int totalElements = (int) customerMapper.getTotalCustomer(mybatisParams);
+		page.setTotalElements(totalElements);
+		
+		//3. 确定查询 content 需要的 firstIndex 和 endIndex
+		int firstIndex = (page.getPageNo() - 1) * page.getPageSize() + 1;
+		int endIndex = firstIndex + page.getPageSize();
+		
+		//4. 把 firstIndex 和 endIndex 加入到 mybatisParams 中
+		mybatisParams.put("firstIndex", firstIndex);
+		mybatisParams.put("endIndex", endIndex);
+		
+		//5. 调方法查询 content
+		List<Customer> content = customerMapper.getCustomers(mybatisParams);
+		page.setContent(content);
+		
+		return page;
+	}
+	
+	/**
+	 * 获取所有地区
+	 * @return
+	 */
+	public List<String> getRegions() {
+		return customerMapper.getRegions();
+	}
+	
+	/**
+	 * 获取所有客户等级
+	 * @return
+	 */
+	public List<String> getLevels() {
+		return customerMapper.getLevels();
+	}
+
+}

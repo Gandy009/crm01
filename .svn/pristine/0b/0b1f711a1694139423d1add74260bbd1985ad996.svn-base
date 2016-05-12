@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<bean id="myJob"
+		class="com.atguigu.crm.test.MyJob"></bean>
+
+	<!-- 整合 Quartz -->
+	<!-- 1. 配置 JobDetail. 使用 MethodInvokingJobDetailFactoryBean  -->	
+	<bean id="jobDetail"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<!-- 指定目标 bean -->
+		<property name="targetObject" ref="customerDrainService"></property>
+		<!-- 指定目标方法. -->
+		<property name="targetMethod" value="add"></property>	
+	</bean>
+	
+	<!-- 2. 配置Trigger -->
+	<bean id="trigger"
+		class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<property name="jobDetail" ref="jobDetail"></property>
+		<property name="cronExpression" value="0 1 10 1 4 ?"></property>	
+	</bean>
+	
+	<!-- 3. 配置 Scheduler -->
+	<bean id="scheduler"
+		class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+		<!-- 指定关联的 Trigger -->
+		<property name="triggers">
+			<array>
+				<ref bean="trigger"/>
+			</array>
+		</property>
+		<!-- 配置 Quartz 的基本属性 -->
+		<property name="quartzProperties">
+			<props>
+				<prop key="org.quartz.threadPool.threadCount">5</prop>
+			</props>
+		</property>
+		<!-- 配置 IOC 容器启动后多久触发 Quartz -->
+		<property name="startupDelay" value="10"></property>
+	</bean>
+</beans>

@@ -1,0 +1,190 @@
+package com.atguigu.crm.handlers;
+
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.util.WebUtils;
+
+import com.atguigu.crm.services.SalesChanceService;
+import com.atguigu.crm.services.SalesPlanService;
+import com.atuigu.crm.entity.SalesChance;
+import com.atuigu.crm.entity.SalesPlan;
+import com.atuigu.crm.orm.Page;
+
+@RequestMapping("/plan")
+@Controller
+public class SalesPlanHandler {
+	
+	@Autowired
+	private SalesPlanService salesPlanService;
+	
+	@Autowired
+	private SalesChanceService salesChanceService;
+	
+	@RequestMapping(value="/make/{chanceId}",method=RequestMethod.GET)
+	public String make(@PathVariable("chanceId") Integer chanceId,Map<String,Object> map){
+		List<Object> salesChanceById = salesPlanService.getSalesChanceById(chanceId);
+		for (Object object : salesChanceById) {
+			if(object instanceof SalesChance){
+				map.put("chance", object);
+			}
+			map.put("salesPlances", object);
+		}
+		return "plan/make";
+	}
+	
+	@RequestMapping(value="/savePlan",method=RequestMethod.POST)
+	public String savePlan(SalesPlan salesPlan,Map<String,Object> map){
+		salesPlanService.save(salesPlan);
+		return "redirect:/plan/make/"+salesPlan.getChance().getId();
+	}
+	
+	@ResponseBody
+	@RequestMapping(value="/make/{id}/{todo}",method=RequestMethod.POST)
+	public String updatePlan(@PathVariable("id") Integer id,@PathVariable("todo") String todo){
+		SalesPlan salesPlan = salesPlanService.getSalesPlanById(id);
+		salesPlan.setTodo(todo);
+		return salesPlanService.updatePlan(salesPlan);
+	}
+	
+	@ResponseBody
+	@RequestMapping(value="/delete/{id}",method=RequestMethod.POST)
+	public String deletePlan(@PathVariable("id") Integer id){
+		return salesPlanService.deletePlan(id);
+	}
+	
+	@RequestMapping(value="/chance/detail/{chanceId}",method=RequestMethod.GET)
+	public String detail(@PathVariable("chanceId") Integer id, Map<String, Object> map){
+		List<Object> salesChanceById = salesPlanService.getSalesChanceById(id);
+		for (Object object : salesChanceById) {
+			if(object instanceof SalesChance){
+				map.put("chance", object);
+			}
+			map.put("plans", object);
+		}
+		return "plan/detail";
+	}
+
+	@RequestMapping("/chance/list")
+	public String list(HttpServletRequest request, 
+			@RequestParam(value="pageNo",required=false) String pageNoStr, Map<String, Object> map){
+		int pageNo = 1;
+		try {
+			pageNo = Integer.parseInt(pageNoStr);
+		} catch (Exception e) {}
+		
+		//获取查询条件的请求参数对应的 Map
+		Map<String, Object> params = WebUtils.getParametersStartingWith(request, "search_");
+		
+		//如何能保证在分页时可以携带查询条件. 
+		//把查询条件的 params 转为查询的字符串
+		String queryString = encodeParamsToQueryString(params);
+		//把查询条件的字符串放入到 request 中
+		map.put("queryString", queryString);
+		
+		Page<SalesChance> page = salesPlanService.getPage(pageNo, params);
+		map.put("page", page);
+		
+		return "plan/list";
+	}
+	
+	private String encodeParamsToQueryString(Map<String, Object> params) {
+		StringBuilder queryString = new StringBuilder();
+		
+		if(params != null
+				&& params.size() > 0){
+			for(Map.Entry<String, Object> entry: params.entrySet()){
+				String key = entry.getKey();
+				Object val = entry.getValue();
+				
+				if("".equals(val)){
+					continue;
+				}
+				
+				queryString.append("search_")
+				                  .append(key)
+				                  .append("=")
+				                  .append(val)
+				                  .append("&");
+			}
+			
+			if(queryString.length() > 0){
+				queryString.replace(queryString.length() - 1, queryString.length(), "");
+			}
+		}
+		
+		return queryString.toString();
+	}
+	
+
+	/**
+	 * 跳转到执行计划页面
+	 * @param id
+	 * @param map
+	 * @return
+	 */
+	@RequestMapping(value="/chance/execution/{id}", method=RequestMethod.GET)
+	public String execute(@PathVariable("id") Integer id, Map<String, Object> map
+			){
+		List<Object> salesChanceById = salesPlanService.getSalesChanceById(id);
+		for (Object object : salesChanceById) {
+			if(object instanceof SalesChance){
+				map.put("chance", object);
+			}
+			map.put("plans", object);
+		}
+		return "/plan/exec";
+	}	
+	
+	/**
+	 * 指定计划
+	 * @return
+	 */
+	@RequestMapping("/make-ajax")
+	@ResponseBody
+	public String make(@RequestParam("id") Long id, 
+			@RequestParam("todo") String todo){
+		/*SalesPlan plan = salesPlanService.get(id);
+		plan.setTodo(todo);
+		salesPlanService.save(plan);*/
+		return "1";
+	}
+	/**
+	 * 保存
+	 * @param id
+	 * @param map
+	 * @return
+	 */
+	@RequestMapping(value="/make",method=RequestMethod.POST)
+	public String save(@RequestParam Integer id,Map<String, Object> map){
+		List<Object> salesChanceById = salesPlanService.getSalesChanceById(id);
+		for (Object object : salesChanceById) {
+			if(object instanceof SalesChance){
+				map.put("chance", object);
+			}
+			map.put("plans", object);
+		}
+		
+		return "/plan/make";
+	}
+	
+	@RequestMapping(value="/execute")
+	public String savePlan(@RequestParam int id , @RequestParam("result") String result,
+			Map<String, Object> map){
+		
+		SalesPlan plan = salesPlanService.getSalesPlanById(id);
+		plan.setResult(result);
+		salesPlanService.updatePlan(plan);
+		return "redirect:/plan/chance/execution/"+plan.getChance().getId();
+	}
+	
+}

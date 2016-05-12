@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.atguigu.crm.mappers.CustomerServiceMapper">
+
+	<select id="getCreatedUserById" resultType="com.atuigu.crm.entity.User">
+		SELECT name FROM users WHERE id=#{id}
+	</select>
+
+	<select id="getCustomerById" resultType="com.atuigu.crm.entity.Customer">
+		SELECT name FROM customers WHERE id=#{id}
+	</select>
+
+	<sql id="queryCondition">
+		<where>
+			allot_id is null
+		</where>
+	</sql>
+	
+	<sql id="queryConditionforFeedback">
+		<where>
+			<if test="serviceType != null">
+				service_type LIKE #{serviceType}
+			</if>
+			<if test="serviceTitle != null">
+				AND service_title LIKE #{serviceTitle}
+			</if>
+			<if test="customerName != null">
+				customer_id = (SELECT id FROM customers WHERE name LIKE #{customerName})
+			</if>
+			<if test="createDateG != null &amp;&amp; createDateL != null">
+				AND create_date BETWEEN #{createDateG} AND #{createDateL}
+			</if>
+		</where>
+	</sql>
+
+	<select id="getAllCustomerServices" resultType="com.atuigu.crm.entity.CustomerService">
+		SELECT id,allot_date as "allotDate",create_date as "createDate",deal_date as "dealDate",
+		deal_result as "dealResult",satisfy,service_deal as "serviceDeal",service_request as "serviceRequest",
+		service_state as "serviceState",service_title as "serviceTitle",service_type as "serviceType",
+		allot_id as "allotTo.id",created_id as "createby.id",customer_id as "customer.id"
+		FROM customer_services
+	</select>
+	
+	<insert id="saveCustomerService">
+		<!-- INSERT into customer_services(crm_seq.nextval,allot_date,create_date,deal_date,deal_result,satisfy,service_deal,
+		service_request,service_state,service_title,service_type,allot_id,created_id,customer_id) 
+		value(#{id},#{allotDate},#{createDate},#{dealDate},#{dealResult},#{satisfy},#{serviceDeal},#{serviceRequest},
+		#{serviceState},#{serviceTitle},#{serviceType},#{allotTo.id},#{createdby.id},#{customer.id}) -->
+		INSERT into customer_services(id,create_date,
+		service_request,service_state,service_title,service_type,created_id) 
+		values(crm_seq.nextval,#{createDate},#{serviceRequest},
+		#{serviceState},#{serviceTitle},#{serviceType},#{createdby.id})
+	</insert>
+	
+	<select id="getTotalElement" resultType="long">
+		select count(*) from customer_services
+		<include refid="queryCondition"></include>
+	</select>
+	<select id="getContent" resultType="com.atuigu.crm.entity.CustomerService">
+		select * from
+		(SELECT rownum rn, id, allot_date, create_date, deal_result, satisfy, service_deal, service_request
+		service_state, service_title, service_type, allot_id, created_id customer_id
+		from customer_services
+		<include refid="queryCondition"></include>
+          ORDER BY id)
+		<![CDATA[
+		 WHERE rn >= #{firstIndex} AND rn < #{endIndex}
+		]]>	
+	</select>
+	
+	<delete id="delete" parameterType="int">
+		DELETE FROM customer_services WHERE id=#{id}
+	</delete>
+
+	<sql id="queryConditionForArtchive">
+		<where>
+			cs.service_state='已归档'
+			<if test="serviceType != null">
+				AND cs.service_type LIKE #{serviceType}
+			</if>
+			<if test="serviceTitle != null">
+				AND cs.service_title LIKE #{serviceTitle}
+			</if>
+			<if test="customerName != null">
+				AND c.name = #{customerName}
+			</if>
+			<if test="createDateG != null &amp;&amp; createDateL != null">
+				AND cs.create_date between #{createDateG} and #{createDateL}
+			</if>
+		</where>
+	</sql>
+	
+	<select id="getContentForFeedback" resultType="com.atuigu.crm.entity.CustomerService">
+		SELECT * FROM 
+			(SELECT rownum rn, id, service_type as "serviceType", service_title as "serviceTitle", customer_id as "customer.id", created_id as "createdby.id", create_date as "createDate"
+		     FROM customer_services 
+		     <include refid="queryConditionforFeedback"/>
+			 ORDER BY id)
+		<![CDATA[
+		WHERE rn >= #{firstIndex} AND rn < #{endIndex}
+		]]>
+	</select>
+	
+	<select id="getTotalElementsForFeedback" resultType="long">
+		SELECT count(id) 
+		FROM customer_services
+		<include refid="queryConditionforFeedback"/>
+	</select>
+	
+	<resultMap id="customerServiceArtchiveResultMap" type="com.atuigu.crm.entity.CustomerService">
+		<id property="id" column="id"/>
+		<result property="serviceType" column="service_type"/>
+		<result property="serviceTitle" column="service_title"/>
+		<result property="serviceState" column="service_state"/>
+		<result property="serviceRequest" column="service_request" />
+		<result property="createDate" column="create_date"/>
+		<result property="allotDate" column="allot_date"/>
+		<result property="serviceDeal" column="service_deal"/>
+		<result property="dealResult" column="deal_result"/>
+		<result property="satisfy" column="satisfy"/>
+		<association property="customer" column="customer_id" select="com.atguigu.crm.mappers.CustomerMapper.getCustomerById"/>
+		<association property="createdby" column="created_id" select="com.atguigu.crm.mappers.UserMapper.get"/>
+		<association property="allotTo" column="allot_id" select="com.atguigu.crm.mappers.UserMapper.get"/>
+	</resultMap>
+	
+	<select id="getTotalCustomerForArtchive" resultType="int">
+		select count(*) from customer_services cs LEFT JOIN customers c ON cs.customer_id=c.id
+		<include refid="queryConditionForArtchive"/>		 
+	</select>
+	
+	<select id="getCusertomerServiceForArtchive" resultMap="customerServiceArtchiveResultMap">
+		SELECT * FROM (SELECT rownum rn,cs.* FROM customer_services cs LEFT JOIN customers c ON cs.customer_id=c.id
+		<include refid="queryConditionForArtchive"/>)
+		<![CDATA[
+		WHERE rn >= #{firstIndex} AND rn < #{endIndex}
+		]]>	 
+	</select>
+	
+	<select id="getCustomerServiceByIdForArtchive" resultMap="customerServiceArtchiveResultMap">
+		SELECT * FROM customer_services WHERE id =#{id}
+	</select>
+</mapper>

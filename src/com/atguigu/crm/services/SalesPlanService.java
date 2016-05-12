@@ -1,0 +1,80 @@
+package com.atguigu.crm.services;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.atguigu.crm.mappers.SalesPlanMapper;
+import com.atuigu.crm.entity.SalesChance;
+import com.atuigu.crm.entity.SalesPlan;
+import com.atuigu.crm.orm.Page;
+import com.atuigu.crm.orm.PropertyFilter;
+
+@Service
+public class SalesPlanService {
+
+	@Autowired
+	private SalesPlanMapper salesPlanMapper;
+	
+	public Page<SalesChance> getPage(int pageNo, Map<String, Object> params) {
+		Page<SalesChance> page = new Page<>();
+		page.setPageNo(pageNo);
+		
+		//1. 把请求参数转为 mybatis 可以使用的请求参数
+		Map<String , Object> mybatisParams = PropertyFilter.parseRequestParams2MybatisParams(params);
+		
+		//2. 查询 totalElements
+		int totalElements = (int) salesPlanMapper.getTotalElements2(mybatisParams);
+		page.setTotalElements(totalElements);
+		
+		//3. 确定查询 content 需要的 firstIndex 和 endIndex
+		int firstIndex = (page.getPageNo() - 1) * page.getPageSize() + 1;
+		int endIndex = firstIndex + page.getPageSize();
+		
+		//4. 把 firstIndex 和 endIndex 加入到 mybatisParams 中
+		mybatisParams.put("firstIndex", firstIndex);
+		mybatisParams.put("endIndex", endIndex);
+		
+		//5. 调方法查询 content
+		List<SalesChance> content = salesPlanMapper.getContent2(mybatisParams);
+		page.setContent(content);
+		
+		return page;
+	}
+
+	public List<Object> getSalesChanceById(Integer id) {
+		List<Object> list = new ArrayList<>();
+		
+		SalesChance chance = salesPlanMapper.getSalesChanceById(id);
+		List<SalesPlan> plans= salesPlanMapper.getPlanById(id);
+		
+		list.add(chance);
+		list.add(plans);
+		
+		return list;
+	}
+	
+	@Transactional(readOnly=false)
+	public void save(SalesPlan salesPlan) {
+		salesPlanMapper.save(salesPlan);
+	}
+
+	public SalesPlan getSalesPlanById(Integer id) {
+		return salesPlanMapper.getSalesPlanById(id);
+	}
+	
+	@Transactional(readOnly=false)
+	public String updatePlan(SalesPlan salesPlan) {
+		
+		return salesPlanMapper.updatePlan(salesPlan)+"";
+	}
+	
+	@Transactional(readOnly=false)
+	public String deletePlan(Integer id) {
+		return salesPlanMapper.deletePlan(id)+"";
+	}
+}

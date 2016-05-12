@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.atguigu.crm.mappers.OrderMapper">
+	<resultMap type="com.atuigu.crm.entity.Order" id="OrderResultMap">
+		<id column="id" property="id"/>
+		<result property="date" column="order_date"/>
+		<collection property="items" column="id" ofType="com.atuigu.crm.entity.OrderItem" select="com.atguigu.crm.mappers.OrderItemMapper.getOrderItemByOrder"></collection>
+	</resultMap>
+	<select id="getHistoryOrderListByCustomer" resultMap="OrderResultMap">
+		SELECT * FROM ( SELECT rownum rn,id,address,order_date,no,status FROM orders o WHERE customer_id = #{id}) 
+		<![CDATA[
+		WHERE rn >= #{firstIndex} AND rn < #{endIndex}
+		]]>
+	</select>
+	
+	<select id="getTotalElements" resultType="long">
+		SELECT count(id) FROM orders
+		WHERE customer_id =#{id}
+	</select>
+	
+	<select id="getOrderById" resultMap="OrderResultMap">
+		SELECT id,address,order_date,no,status FROM orders WHERE id = #{id}
+	</select>
+	
+</mapper>

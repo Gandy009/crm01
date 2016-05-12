@@ -1,0 +1,53 @@
+package com.atguigu.crm.services;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.atguigu.crm.mappers.CustomerMapper;
+import com.atguigu.crm.mappers.CustomerServiceMapper;
+import com.atuigu.crm.entity.Customer;
+import com.atuigu.crm.entity.CustomerService;
+
+/**
+ * 
+ * @author 杨博
+ * @date 2016年4月1日
+ */
+@Service
+public class CustomerServiceService {
+
+	@Autowired
+	private CustomerServiceMapper customerServiceMapper;
+	
+	@Autowired
+	private CustomerMapper customerMapper;
+	
+	@Transactional(readOnly=true)
+	public List<Customer> getAllCustomer() {
+		List<CustomerService> customerServices = customerServiceMapper.getAllCustomerServices();
+		List<Customer> list = new ArrayList<>();
+		for (CustomerService customerService : customerServices) {
+			Customer customer2 = customerService.getCustomer();
+			if(customer2 != null){
+				long customerId = customer2.getId();
+				Customer customer = customerMapper.getCustomerById((int)(customerId));
+				list.add(customer);
+			}
+		}
+		return list;
+	}
+	
+	@Transactional(readOnly=true)
+	public List<CustomerService> getAllCustomerService() {
+		return customerServiceMapper.getAllCustomerServices();
+	}
+
+	public void saveCustomerService(CustomerService customerService) {
+		customerServiceMapper.saveCustomerService(customerService);
+	}
+}

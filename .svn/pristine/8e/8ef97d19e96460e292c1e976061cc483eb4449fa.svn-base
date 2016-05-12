@@ -1,0 +1,131 @@
+package com.atguigu.crm.services;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.atguigu.crm.mappers.CustomerMapper;
+import com.atguigu.crm.mappers.CustomerServiceMapper;
+import com.atguigu.crm.mappers.UserMapper;
+import com.atuigu.crm.entity.Customer;
+import com.atuigu.crm.entity.CustomerService;
+import com.atuigu.crm.orm.Page;
+import com.atuigu.crm.orm.PropertyFilter;
+
+/**
+ * 
+ * @author 杨博
+ * @date 2016年4月1日
+ */
+@Service
+public class CustomerServiceService {
+
+	@Autowired
+	private CustomerServiceMapper customerServiceMapper;
+	
+	@Autowired
+	private CustomerMapper customerMapper;
+	
+	@Autowired 
+	private UserMapper userMapper;
+	
+	
+	@Transactional(readOnly=true)
+	public List<Customer> getAllCustomer() {
+		List<CustomerService> customerServices = customerServiceMapper.getAllCustomerServices();
+		List<Customer> list = new ArrayList<>();
+		for (CustomerService customerService : customerServices) {
+			Customer customer2 = customerService.getCustomer();
+			if(customer2 != null){
+				long customerId = customer2.getId();
+				Customer customer = customerMapper.getCustomerById((int)(customerId));
+				list.add(customer);
+			}
+		}
+		return list;
+	}
+	
+	@Transactional(readOnly=true)
+	public List<CustomerService> getAllCustomerService() {
+		return customerServiceMapper.getAllCustomerServices();
+	}
+
+	/**
+	 * Page
+	 * @param pageNo
+	 * @param params
+	 * @return
+	 * @author Mars Lou
+	 * @date 2016年4月1日
+	 */
+	@Transactional
+	public Page<CustomerService> getPage(int pageNo,
+			Map<String, Object> params) {
+
+		Page<CustomerService> page=new Page<>();
+		page.setPageNo(pageNo);
+		
+		//1. 把请求参数转为 mybatis 可以使用的请求参数
+		Map<String , Object> mybatisParams =PropertyFilter.parseRequestParams2MybatisParams(params);		
+		
+		int totalElement=(int) customerServiceMapper.getTotalElement(mybatisParams);
+		page.setTotalElements(totalElement);
+		
+		//3. 确定查询 content 需要的 firstIndex 和 endIndex
+		int firstIndex = (page.getPageNo() - 1) * page.getPageSize() + 1;
+		int endIndex = firstIndex + page.getPageSize();
+		//4. 把 firstIndex 和 endIndex 加入到 mybatisParams 中	
+		mybatisParams.put("firstIndex", firstIndex);
+		mybatisParams.put("endIndex", endIndex);
+		
+		//5. 调方法查询 content
+		List<CustomerService> content=customerServiceMapper.getContent(mybatisParams);	
+		page.setContent(content);
+		return page;
+	}
+
+	public void delete(Integer id) {
+		
+		customerServiceMapper.delete(id);
+		
+	}
+	
+	/**
+	 * Artchive
+	 * @author y_y
+	 *
+	 * @param pageNo
+	 * @param params
+	 * @return
+	 */
+	public Page<CustomerService> getCusertomerServiceForArtchive(
+			int pageNo,Map<String, Object> params) {
+		Page<CustomerService> page = new Page<>();
+		page.setPageNo(pageNo);
+		Map<String , Object> mybatisParams = PropertyFilter.parseRequestParams2MybatisParams(params);
+		int totalElements = (int) customerServiceMapper.getTotalCustomerForArtchive(mybatisParams);
+		page.setTotalElements(totalElements);
+		int firstIndex = (page.getPageNo() - 1) * page.getPageSize() + 1;
+		int endIndex = firstIndex + page.getPageSize();
+		mybatisParams.put("firstIndex", firstIndex);
+		mybatisParams.put("endIndex", endIndex);
+		List<CustomerService> content = customerServiceMapper.getCusertomerServiceForArtchive(mybatisParams);
+		page.setContent(content);
+		return page;
+	}
+	
+	/**
+	 * Artchive
+	 * @author y_y
+	 *
+	 * @param id
+	 * @return
+	 */
+	public CustomerService getCustomerServiceByIdForArtchive(Integer id) {
+		return customerServiceMapper.getCustomerServiceByIdForArtchive(id);
+	}
+}

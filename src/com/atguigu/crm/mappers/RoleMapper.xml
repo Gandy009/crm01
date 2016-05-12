@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.atguigu.crm.mappers.RoleMapper">
+	
+	<select id="getTotalRoles" resultType="long">
+		SELECT count(id) FROM roles
+	</select>
+	
+	<resultMap type="com.atuigu.crm.entity.Role" id="roleResultMap">
+		<id column="id" property="id"/>
+		<result column="name" property="name"/>
+		<result column="description" property="description"/>
+		<result column="enabled" property="enabled"/>
+		<collection property="authorities" column="id" ofType="com.atuigu.crm.entity.Authority" select="com.atguigu.crm.mappers.AuthorityMapper.getAuthoritiesByRoleId"/> 
+		<collection property="users" column="id" ofType="com.atuigu.crm.entity.User" select="com.atguigu.crm.mappers.UserMapper.getUserByRoleId"/>
+	</resultMap>
+	
+	<select id="getRoleList" resultMap="roleResultMap">
+		SELECT * FROM ( SELECT rownum rn,r.* FROM roles r) 
+		<![CDATA[
+		WHERE rn >= #{firstIndex} AND rn < #{endIndex}
+		]]>
+	</select>
+	
+	<delete id="deleteRoleById">
+		DELETE FROM	roles WHERE id = #{roleId}
+	</delete>
+	
+	<select id="getRoleById" resultMap="roleResultMap">
+		SELECT * FROM roles WHERE id = #{roleId}
+	</select>
+	
+	<delete id="deleteAssgin">
+		delete from role_authority where role_id =#{roleId}
+	</delete>
+	
+	<insert id="updateAssgin">
+		insert into role_authority(role_id,authority_id)
+		<foreach item="authority" collection="authorities"  separator="union all">
+		(select #{id,jdbcType=INTEGER},#{authority.id,jdbcType=INTEGER} from dual)
+      	</foreach>
+	</insert>
+	
+	<insert id="insertRole">
+		insert into roles(id,name,description,enabled)
+		values(crm_seq.nextval,#{name},#{description},#{enabled})
+	</insert>
+</mapper>

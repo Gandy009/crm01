@@ -1,0 +1,54 @@
+package com.atguigu.crm.services;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.atguigu.crm.mappers.DictMapper;
+import com.atuigu.crm.entity.Dict;
+
+@Service
+public class DictService {
+	
+	@Autowired
+	private DictMapper dictMapper;
+
+	public List<String> getRegions() {
+		List<String> list = new ArrayList<>();
+		List<Dict> regions = dictMapper.getAllRegion();
+		for (Dict dict : regions) {
+			list.add(dict.getItem());
+		}
+		return list;
+	}
+
+	public List<String> getLevels() {
+		List<String> list = new ArrayList<>();
+		List<Dict> levels = dictMapper.getAllLevel();
+		for (Dict dict : levels) {
+			list.add(dict.getItem());
+		}
+		return list;
+	}
+
+	public List<String> getSatisfies() {
+		List<String> list = new ArrayList<>();
+		List<Dict> satisfies = dictMapper.getAllSatisfie();
+		for (Dict dict : satisfies) {
+			list.add(dict.getItem());
+		}
+		return list;
+	}
+
+	public List<String> getCredits() {
+		List<String> list = new ArrayList<>();
+		List<Dict> credits = dictMapper.getAllCredit();
+		for (Dict dict : credits) {
+			list.add(dict.getItem());
+		}
+		return list;
+	}
+
+}

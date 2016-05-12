@@ -1,0 +1,11 @@
+package com.atguigu.crm.mappers;
+
+import java.util.List;
+
+import com.atuigu.crm.entity.Contact;
+
+public interface ContactMapper {
+
+	List<Contact> getManagersByCustomer(Integer id);
+
+}

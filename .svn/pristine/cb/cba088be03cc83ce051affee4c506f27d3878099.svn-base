@@ -1,0 +1,12 @@
+package com.atguigu.crm.mappers;
+
+import java.util.List;
+
+import com.atuigu.crm.entity.CustomerService;
+
+public interface CustomerServiceMapper {
+
+	List<CustomerService> getAllCustomerServices();
+
+	void saveCustomerService(CustomerService customerService);
+}

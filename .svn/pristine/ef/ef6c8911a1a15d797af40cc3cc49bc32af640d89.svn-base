@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.atguigu.crm.mappers.UserMapper">
+	<resultMap type="com.atuigu.crm.entity.User" id="userResultMapper">
+		<id column="id" property="id"/>
+		<result column="name" property="name"/>
+		<result column="password" property="password"/>
+		<result column="enabled" property="enabled"/>
+		<association property="role" column="role.id" select="com.atguigu.crm.mappers.RoleMapper.getById"/>
+	</resultMap>
+
+	<select id="getUserList" resultMap="userResultMapper">
+		SELECT u.id, u.name, u.enabled, r.name FROM users u LEFT OUTER JOIN roles r ON role_id = r.id 
+	</select>
+	
+	<select id="getUserByRoleId" resultMap="userResultMapper">
+		SELECT * FROM users WHERE role_id = #{roleId};
+	</select>
+	
+	<sql id="queryCondition">
+		<where>
+			<if test="name != null">
+				name like #{name}
+			</if>
+			<if test="enabled != null">
+				AND enabled like #{enabled}
+			</if>
+		</where>
+	</sql>
+	
+	<select id="getTotalElements" resultType="int">
+		SELECT COUNT(*) FROM users
+		<include refid="queryCondition"/>
+	</select>
+	
+	<select id="getContent" parameterType="map" resultType="com.atuigu.crm.entity.User">
+		SELECT *
+		FROM (SELECT rownum rn,id,enabled,name,password 
+			  FROM users 
+			  <include refid="queryCondition"/>)
+		<![CDATA[
+		WHERE rn >= #{firstIndex} AND rn < #{endIndex}
+		]]>
+	</select>
+	
+	<update id="update">
+		UPDATE users
+		<set>
+			<if test="enabled != null">
+				enabled = #{enabled},
+			</if>
+			<if test="name != null">
+				name = #{name},
+			</if>
+			<if test="password != null">
+				password = #{password},
+			</if>
+			<if test="role.id != null">
+				role_id = #{role.id}
+			</if>
+			where id = #{id}
+		</set>
+	</update>
+</mapper>

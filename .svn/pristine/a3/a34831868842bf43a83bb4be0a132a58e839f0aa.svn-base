@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.atguigu.crm.mappers.CustomerServiceMapper">
+
+	<select id="getAllCustomerServices" resultType="com.atuigu.crm.entity.CustomerService">
+		SELECT id,allot_date as "allotDate",create_date as "createDate",deal_date as "dealDate",
+		deal_result as "dealResult",satisfy,service_deal as "serviceDeal",service_request as "serviceRequest",
+		service_state as "serviceState",service_title as "serviceTitle",service_type as "serviceType",
+		allot_id as "allotTo.id",created_id as "createby.id",customer_id as "customer.id"
+		FROM customer_services
+	</select>
+	
+	<insert id="saveCustomerService">
+		<!-- INSERT into customer_services(crm_seq.nextval,allot_date,create_date,deal_date,deal_result,satisfy,service_deal,
+		service_request,service_state,service_title,service_type,allot_id,created_id,customer_id) 
+		value(#{id},#{allotDate},#{createDate},#{dealDate},#{dealResult},#{satisfy},#{serviceDeal},#{serviceRequest},
+		#{serviceState},#{serviceTitle},#{serviceType},#{allotTo.id},#{createby.id},#{customer.id}) -->
+		INSERT into customer_services(id,create_date,
+		service_request,service_state,service_title,service_type) 
+		values(crm_seq.nextval,#{createDate},#{serviceRequest},
+		#{serviceState},#{serviceTitle},#{serviceType})
+	</insert>
+</mapper>

@@ -1,0 +1,128 @@
+package com.atguigu.crm.services;
+
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.atguigu.crm.mappers.SalesChanceMapper;
+import com.atuigu.crm.entity.Contact;
+import com.atuigu.crm.entity.Customer;
+import com.atuigu.crm.entity.SalesChance;
+import com.atuigu.crm.orm.Page;
+import com.atuigu.crm.orm.PropertyFilter;
+
+@Service
+public class SalesChanceService {
+
+	@Autowired
+	private SalesChanceMapper salesChanceMapper;
+	
+	@Transactional
+	public void update(SalesChance chance){
+		salesChanceMapper.update(chance);
+	}
+	
+	@Transactional(readOnly=true)
+	public SalesChance get(Integer id){
+		return salesChanceMapper.get(id);
+	}
+	
+	@Transactional
+	public void delete(Integer id){
+		salesChanceMapper.delete(id);
+	}
+	
+	@Transactional
+	public void save(SalesChance salesChance){
+		salesChanceMapper.save(salesChance);
+	}
+	
+	@Transactional(readOnly=true)
+	public Page<SalesChance> getPage(int pageNo){
+		Page<SalesChance> page = new Page<>();
+		page.setPageNo(pageNo);
+		
+		//1. 查询 totalElements
+		int totalElements = (int) salesChanceMapper.getTotalElements();
+		page.setTotalElements(totalElements);
+		
+		//2. 查询 content
+		int firstIndex = (page.getPageNo() - 1) * page.getPageSize() + 1;
+		int endIndex = firstIndex + page.getPageSize();
+		
+		List<SalesChance> content = salesChanceMapper.getContent(firstIndex, endIndex);
+		page.setContent(content);
+		
+		return page;
+	}
+	
+	@Transactional(readOnly=true)
+	public Page<SalesChance> getPage(int pageNo, Map<String, Object> params) {
+		Page<SalesChance> page = new Page<>();
+		page.setPageNo(pageNo);
+		
+		//1. 把请求参数转为 mybatis 可以使用的请求参数
+		Map<String , Object> mybatisParams = PropertyFilter.parseRequestParams2MybatisParams(params);
+		
+		//2. 查询 totalElements
+		int totalElements = (int) salesChanceMapper.getTotalElements2(mybatisParams);
+		page.setTotalElements(totalElements);
+		
+		//3. 确定查询 content 需要的 firstIndex 和 endIndex
+		int firstIndex = (page.getPageNo() - 1) * page.getPageSize() + 1;
+		int endIndex = firstIndex + page.getPageSize();
+		
+		//4. 把 firstIndex 和 endIndex 加入到 mybatisParams 中
+		mybatisParams.put("firstIndex", firstIndex);
+		mybatisParams.put("endIndex", endIndex);
+		
+		//5. 调方法查询 content
+		List<SalesChance> content = salesChanceMapper.getContent2(mybatisParams);
+		page.setContent(content);
+		
+		return page;
+	}
+	
+	@Transactional
+	public void updateStopPlan(Integer chanceId) {
+		salesChanceMapper.updateStopPlan(chanceId);
+	}
+	
+	@Transactional
+	public void updateFinishPlan(Integer chanceId) {
+		salesChanceMapper.updateSalesChanceFinishPlan(chanceId);
+		
+		List<Customer> customers = salesChanceMapper.getCustomerById(chanceId);
+		Customer customer2 = new Customer();
+		
+		for (Customer customer : customers) {
+			customer2.setId(customer.getId());
+			customer2.setName(customer.getName());
+			customer2.setState("正常");
+			UUID uuid = UUID.randomUUID();
+			String uuidString = uuid.toString();
+			customer2.setNo(uuidString);
+			salesChanceMapper.insertCusomersFinishPlan(customer2);
+			break;
+		}
+
+		SalesChance contact2 = salesChanceMapper.getContactById(chanceId);
+		Contact contact = new Contact();
+		if(contact2.getContact() !=null&&contact2.getContactTel() != null&&customer2.getId() != null){
+			String name = contact2.getContact();
+			String tel = contact2.getContactTel();
+			//Long id = customer2.getId();
+			//System.out.println(name + tel + id);
+			
+			contact.setName(name);
+			contact.setTel(tel);
+			//customer2.setId(id);
+			contact.setCustomer(customer2);
+			salesChanceMapper.insertContactsFinishPlan(contact);
+		}
+	}
+}

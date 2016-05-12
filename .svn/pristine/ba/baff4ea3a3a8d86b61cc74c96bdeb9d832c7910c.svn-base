@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.atguigu.crm.mappers.DictMapper">
+
+	<sql id="queryCondition">
+		<where>
+			<if test="type != null">
+				type LIKE #{type}
+			</if>
+			<if test="item != null">
+				AND item LIKE #{item}
+			</if>
+			<if test="value != null">
+				AND value LIKE #{value}
+			</if>
+		</where>
+	</sql>
+	
+	<select id="getAllRegion" resultType="com.atuigu.crm.entity.Dict">
+		SELECT item FROM dicts WHERE type='地区'
+	</select>
+	
+	<select id="getAllLevel" resultType="com.atuigu.crm.entity.Dict">
+		SELECT item FROM dicts WHERE type='客户等级'
+	</select>
+	
+	<select id="getAllSatisfie" resultType="com.atuigu.crm.entity.Dict">
+		SELECT item FROM dicts WHERE type='满意度'
+	</select>
+	
+	<select id="getAllCredit" resultType="com.atuigu.crm.entity.Dict">
+		SELECT item FROM dicts WHERE type='服务类型'
+	</select>
+	
+	
+	<!-- Mar Lou -->
+	
+	
+	
+	<select id="getTotalElements" resultType="long">
+		SELECT COUNT(*) FROM dicts
+		 <include refid="queryCondition"/>
+	</select>
+	
+	<select id="getContent" resultType="com.atuigu.crm.entity.Dict">
+		SELECT * FROM 
+		(SELECT rownum rn, id, type, item, value, editable 
+          FROM dicts 
+          <include refid="queryCondition"/>
+          ORDER BY id)
+		<![CDATA[
+		 WHERE rn >= #{firstIndex} AND rn < #{endIndex}
+		]]>	 
+	</select>
+	
+	<insert id="save" parameterType="com.atuigu.crm.entity.Dict">
+		INSERT INTO dicts(id, type, item, value, editable)
+		VALUES(crm_seq.nextval, #{type}, #{item}, #{value}, #{editable})
+	</insert>
+	
+	<delete id="delete" parameterType="java.lang.Integer">
+		DELETE FROM dicts WHERE id=#{id}
+	</delete>
+	
+	<select id="getDictById" parameterType="java.lang.Integer" resultType="com.atuigu.crm.entity.Dict">
+		SELECT * FROM dicts WHERE id=#{id}
+	</select>
+	
+	<insert id="update" parameterType="com.atuigu.crm.entity.Dict">
+		update dicts 
+		<set>
+			<if test="type !=null and type !='' ">type=#{type},</if>
+			<if test="item !=null and item !='' ">item=#{item},</if>
+			<if test="value !=null and value !='' ">value=#{value},</if>
+			<if test="editable !=null and editable !='' ">editable=#{editable},</if>
+		</set>
+		where id=#{id}
+	</insert>
+</mapper>

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.atguigu.crm.mappers.SalesPlanMapper">
+	
+	
+	<sql id="queryCondition">
+		<where>
+			<if test="custName != null">
+				cust_name LIKE #{custName}
+			</if>
+			<if test="title != null">
+				AND title LIKE #{title}
+			</if>
+			<if test="contact != null">
+				AND contact LIKE #{contact}
+			</if>
+		</where>
+	</sql>
+	
+	
+	<select id="getContent2" resultType="com.atuigu.crm.entity.SalesChance">
+		SELECT * FROM 
+			(SELECT rownum rn, id, cust_name, title, contact, contact_tel, create_date , status
+		     FROM sales_chances 
+		     <include refid="queryCondition"/>
+			 ORDER BY id)
+		<![CDATA[
+		WHERE rn >= #{firstIndex} AND rn < #{endIndex}
+		]]>	 
+	</select>
+	
+	<select id="getTotalElements2" resultType="long">
+		SELECT count(id) 
+		FROM sales_chances
+		<include refid="queryCondition"/>
+	</select>
+	
+	<select id="getSalesChanceById" resultType="com.atuigu.crm.entity.SalesChance">
+		SELECT s.id, source, cust_name, rate, title, contact, contact_tel, s.description, created_user_id as "createBy.id", u.name as "createBy.name", r.name as "createBy.role.name", create_date, designee_id as "designee.id", w.name as "designee.name"  
+	      FROM sales_chances s 
+	      LEFT OUTER JOIN users u 
+	      ON s.created_user_id = u.id
+	      LEFT OUTER JOIN roles r 
+	      ON u.role_id = r.id 
+	      LEFT OUTER JOIN users w 
+	      ON s.designee_id = w.id
+	      WHERE s.id = #{id}
+	</select>
+	
+	<select id="getPlanById" resultType="com.atuigu.crm.entity.SalesPlan">
+		SELECT p.id, p.plan_date as "date", p.plan_result as "result", p.todo, p.chance_id 
+		FROM sales_plan p, sales_chances s
+		WHERE p.chance_id = s.id AND p.chance_id = #{id}
+	</select>
+	
+	<insert id="save" parameterType="com.atuigu.crm.entity.SalesPlan">
+		insert into sales_plan(id,plan_date,todo,chance_id
+		<if test="result != null">
+			,plan_result
+		</if>
+		) values(crm_seq.nextval,#{date},#{todo},#{chance.id}
+		<if test="result != null">
+			,#{result}
+		</if>
+		)
+	</insert>
+	
+	<resultMap type="com.atuigu.crm.entity.SalesPlan" id="planResultMap">
+		<id property="id" column="id"/>
+		<result property="date" column="plan_date"/>
+		<result property="result" column="plan_result"/>
+		<result property="todo" column="todo"/>
+		<association property="chance" column="chance_id" select="com.atguigu.crm.mappers.SalesChanceMapper.get"/> 
+	</resultMap>
+	<select id="getSalesPlanById" resultType="com.atuigu.crm.entity.SalesPlan">
+		select p.id,p.plan_date,p.plan_result,p.todo,p.chance_id as "chance.id"
+		from sales_plan  p
+		left join sales_chances c
+		on p.chance_id = c.id
+		where p.id=#{id}
+	</select>
+	
+	<update id="updatePlan" parameterType="com.atuigu.crm.entity.SalesPlan">
+		update sales_plan set todo=#{todo},chance_id=#{chance.id}
+		<if test="result != null">
+			,plan_result = #{result}
+		</if>
+		where id=#{id}
+	</update>
+	
+	<delete id="deletePlan" parameterType="Integer">
+		delete from sales_plan where id=#{id}
+	</delete>
+</mapper>

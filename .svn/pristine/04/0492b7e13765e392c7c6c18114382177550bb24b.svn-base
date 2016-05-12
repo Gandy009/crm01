@@ -1,0 +1,217 @@
+package com.atguigu.crm.handlers;
+
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.support.ResourceBundleMessageSource;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.util.WebUtils;
+
+import com.atguigu.crm.services.RoleService;
+import com.atguigu.crm.services.UserService;
+import com.atuigu.crm.entity.Role;
+import com.atuigu.crm.entity.User;
+import com.atuigu.crm.orm.Page;
+
+@RequestMapping("/user")
+@Controller
+public class UserHandler {
+
+	@Autowired
+	private UserService userService;
+	@Autowired
+	private RoleService roleService;
+	
+	@Autowired
+	private ResourceBundleMessageSource messageSource;
+	
+	/**
+	 * 1. 在表单提交的情况下, 响应结果尽可能使用重定向技术. 因为可以避免表单的重复提交. 
+	 * 2. 在使用重定向之后, request 中加入的 key-value 在页面上无法得到. 因为是两个请求. 
+	 * 3. 在 SpringMVC 中可以有办法解决这个问题. 即在重定向时, 页面上也可以得到在 handler 中加入的 key-value
+	 * 1). 在方法中使用 RedirectAttributes 类型的参数
+	 * 2). 调用 RedirectAttributes 的 addFlashAttribute 方法加入 key-value
+	 * 3). 响应的结果需要使用 SpringMVC 映射一下, 而不能直接重定向会目标页面. 
+	 * YES: 
+	 * return "redirect:/index";
+	 * <mvc:view-controller path="/index" view-name="index"/>
+	 * NO: return "redirect:/index.jsp";
+	 * 
+	 * 4. 错误消息可以放入到国际化资源文件中.
+	 * 1). 在 SpringMVC 的配置文件中配置国际化资源文件. 即配置 org.springframework.context.support.ResourceBundleMessageSource bean
+	 * 2). 在国际化资源文件中加入 key-value
+	 * 3). 把 ResourceBundleMessageSource bean 注入到 Handler 中.
+	 * 4). 调用 getMessage(String code, Object[] args, Locale locale) 方法获取国际化资源文件中的 value 值.
+	 * code: 国际化资源文件中的 key
+	 * args: 国际化资源文件中的占位符
+	 * locale: Locale 对象. 可以直接在 handler 方法中加入该类型的参数
+	 * 
+	 * 5. 在 Handler 方法中使用 HttpSession 对象. 建议使用原生的 HttpSession 对象. 
+	 */
+	@RequestMapping(value="/login",method=RequestMethod.POST)
+	public String login(@RequestParam(value="username", required=false) String username, 
+			@RequestParam(value="password",required=false) String password,
+			RedirectAttributes attributes, Locale locale, HttpSession session){
+		User user = userService.login(username, password);
+		if(user != null){
+			//把用户信息保存到 HttpSession 中.
+			session.setAttribute("user", user);
+			return "success";
+		}
+		
+		//登陆失败. 
+		attributes.addFlashAttribute("message", messageSource.getMessage("error.user.login", null, locale));
+		return "redirect:/index";
+	}
+	
+	/**
+	 * 更新一条用户信息
+	 * @param user
+	 * @param attributes
+	 * @return
+	 */
+	@RequestMapping(value="/create",method=RequestMethod.PUT)
+	public String update(User user,
+						 RedirectAttributes attributes) {
+		userService.update(user);
+		
+		attributes.addFlashAttribute("message", "修改成功！");
+		
+		return "redirect:/user/list";
+	}
+	
+	/**
+	 * 根据 ID 删除一条记录
+	 * @param id
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping(value="/delete",method=RequestMethod.DELETE)
+	public String delete(@RequestParam("id") Integer id) {
+		userService.delete(id);
+		
+		return "1";
+	}
+	
+	/**
+	 * 去往编辑页面
+	 * @param id
+	 * @param map
+	 * @return
+	 */
+	@RequestMapping("/edit")
+	public String edit(@RequestParam("id") Integer id,
+						Map<String, Object> map) {
+		User user = userService.get(id);
+		List<Role> roles = roleService.getRoles();
+		
+		map.put("user", user);
+		map.put("roles", roles);
+		
+		return "user/input";
+	}
+	
+	/**
+	 * 保存一个新的用户
+	 * @param user
+	 * @return
+	 */
+	@RequestMapping(value="/create",method=RequestMethod.POST)
+	public String save(User user,
+					   RedirectAttributes attributes) {
+		userService.save(user);
+		
+		attributes.addFlashAttribute("message","新建成功！");
+		return "redirect:/user/list";
+	}
+	
+	/**
+	 * 去往用户新建页面
+	 * @param id
+	 * @param map
+	 * @return
+	 */
+	@RequestMapping("/create")
+	public String create(Map<String, Object> map) {
+		User user = new User();
+		List<Role> roles = roleService.getRoles();
+		
+		map.put("user", user);
+		map.put("roles", roles);
+		
+		return "user/input";
+	}
+	
+	/**
+	 * 去往系统用户页面
+	 * @param pageNoStr
+	 * @param map
+	 * @return
+	 */
+	@RequestMapping("/list")
+	public String list(@RequestParam(value="pageNo", required=false) String pageNoStr,
+					   Map<String, Object> map,
+					   HttpServletRequest request) {
+		int pageNo = 1;
+		try {
+			pageNo = Integer.parseInt(pageNoStr);
+		} catch (Exception e) {}
+		
+		//获取查询条件的请求参数对应的 Map
+		Map<String, Object> params = WebUtils.getParametersStartingWith(request, "search_");
+		
+		//如何能保证在分页时可以携带查询条件. 
+		//把查询条件的 params 转为查询的字符串
+		String queryString = encodeParamsToQueryString(params);
+		//把查询条件的字符串放入到 request 中
+		map.put("queryString", queryString);
+		
+		Page<User> page = userService.getPage(pageNo, params);
+		map.put("page", page);
+		
+		return "user/list";
+	}
+	
+	/**
+	 * 将请求参数转换成字符串，在页面跳转时保留查询条件
+	 * @param params
+	 * @return
+	 */
+	private String encodeParamsToQueryString(Map<String, Object> params) {
+	StringBuilder queryString = new StringBuilder();
+	
+	if(params != null
+			&& params.size() > 0){
+		for(Map.Entry<String, Object> entry: params.entrySet()){
+			String key = entry.getKey();
+			Object val = entry.getValue();
+			
+			if("".equals(val)){
+				continue;
+			}
+			
+			queryString.append("search_")
+			                  .append(key)
+			                  .append("=")
+			                  .append(val)
+			                  .append("&");
+		}
+		
+		if(queryString.length() > 0){
+			queryString.replace(queryString.length() - 1, queryString.length(), "");
+		}
+	}
+	
+		return queryString.toString();
+	}
+}

@@ -1,0 +1,13 @@
+package com.atguigu.crm.mappers;
+
+import java.util.List;
+import java.util.Map;
+
+import com.atuigu.crm.entity.SalesChance;
+
+public interface SalesPlanMapper {
+
+	List<SalesChance> getContent2(Map<String, Object> params);
+	
+	long getTotalElements2(Map<String, Object> params);
+}

@@ -1,0 +1,18 @@
+package com.atguigu.crm.mappers;
+
+import java.util.List;
+
+import com.atuigu.crm.entity.Dict;
+
+public interface DictMapper {
+
+	List<Dict> getAllRegion();
+
+	List<Dict> getAllLevel();
+
+	List<Dict> getAllSatisfie();
+
+	List<Dict> getAllCredit();
+
+	
+}

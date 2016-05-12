@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.atguigu.crm.mappers.ContactMapper">
+	
+	<select id="getAllManagers" resultType="com.atuigu.crm.entity.Contact">
+		SELECT * FROM contacts ct WHERE ct.position IS NOT NULL
+	</select>
+	
+	<select id="getTotalElements" resultType="long">
+		select count(id) from contacts 
+	  	WHERE customer_id LIKE #{id}		
+	</select>
+	<select id="getContent" resultType="com.atuigu.crm.entity.Contact">
+		SELECT * FROM 
+		(SELECT rownum rn, id, name, sex, position, tel, mobile, memo
+          FROM contacts 
+          WHERE customer_id = #{id}
+          ORDER BY id)
+		<![CDATA[
+		 WHERE rn >= #{firstIndex} AND rn < #{endIndex}
+		]]>	 
+	</select>
+	
+	<delete id="delete" >
+	
+		delete from contacts where id=#{id}		
+	</delete>
+	
+	<select id="getContactById" resultType="com.atuigu.crm.entity.Contact">
+		select * from contacts where id=#{id}
+	</select>
+	<!-- (id,memo, mobile, name, position,sex,tel,customer_id) -->
+	<update id="update" parameterType="com.atuigu.crm.entity.Contact" >
+		update contacts 
+		<set>
+			<if test="memo !=null and memo !='' ">memo=#{memo},</if>
+			<if test="mobile !=null and mobile !='' ">mobile=#{mobile},</if>
+			<if test="name !=null and name !='' ">name=#{name},</if>
+			<if test="position !=null and position !='' ">position=#{position},</if>
+			<if test="sex !=null and sex !='' ">sex=#{sex},</if>
+			<if test="tel !=null and tel !='' ">tel=#{tel},</if>
+			<if test="customer.id >0 ">customer_id=#{customer.id},</if>
+		</set>		
+		where id=#{id}
+	</update>
+	<insert id="save2" parameterType="com.atuigu.crm.entity.Contact">
+	
+		<selectKey keyProperty="id" keyColumn="id" order="BEFORE" resultType="java.lang.Long">
+				SELECT crm_seq.nextval FROM dual
+		</selectKey>
+		
+		INSERT INTO contacts
+		(id,memo, mobile, name, position,sex,tel,customer_id)		
+		VALUES
+		(#{id}, #{memo}, #{mobile}, #{name}, #{position}, #{sex}, #{tel},
+		#{customer.id})		
+	</insert>
+</mapper>

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.atguigu.crm.mappers.SalesPlanMapper">
+	
+	<sql id="queryCondition">
+		<where>
+			<if test="custName != null">
+				cust_name LIKE #{custName}
+			</if>
+			<if test="title != null">
+				AND title LIKE #{title}
+			</if>
+			<if test="contact != null">
+				AND contact LIKE #{contact}
+			</if>
+		</where>
+	</sql>
+	
+	<select id="getContent2" resultType="com.atuigu.crm.entity.SalesChance">
+		SELECT * FROM 
+			(SELECT rownum rn, id, cust_name, title, contact, contact_tel, create_date , status
+		     FROM sales_chances 
+		     <include refid="queryCondition"/>
+			 ORDER BY id)
+		<![CDATA[
+		WHERE rn >= #{firstIndex} AND rn < #{endIndex}
+		]]>	 
+	</select>
+	
+	<select id="getTotalElements2" resultType="long">
+		SELECT count(id) 
+		FROM sales_chances
+		<include refid="queryCondition"/>
+	</select>
+	
+	<select id="getSalesChanceById" resultType="com.atuigu.crm.entity.SalesChance">
+		SELECT s.id, source, cust_name, rate, title, contact, contact_tel, s.description, created_user_id as "createBy.id", u.name as "createBy.name", r.name as "createBy.role.name", create_date, designee_id as "designee.id", w.name as "designee.name"  
+	      FROM sales_chances s 
+	      LEFT OUTER JOIN users u 
+	      ON s.created_user_id = u.id
+	      LEFT OUTER JOIN roles r 
+	      ON u.role_id = r.id 
+	      LEFT OUTER JOIN users w 
+	      ON s.designee_id = w.id
+	      WHERE s.id = #{id}
+	</select>
+	
+	<select id="getPlanById" resultType="com.atuigu.crm.entity.SalesPlan">
+		SELECT p.id, p.plan_date as "date", p.plan_result as "result", p.todo, p.chance_id 
+		FROM sales_plan p, sales_chances s
+		WHERE p.chance_id = s.id AND p.chance_id = #{id}
+	</select>
+	
+</mapper>

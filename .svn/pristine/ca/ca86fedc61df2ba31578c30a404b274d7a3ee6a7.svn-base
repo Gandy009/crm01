@@ -1,0 +1,150 @@
+package com.atguigu.crm.handlers;
+
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.util.WebUtils;
+
+import com.atguigu.crm.services.ContactService;
+import com.atguigu.crm.services.CustomerInfoService;
+import com.atuigu.crm.entity.Contact;
+import com.atuigu.crm.entity.Customer;
+import com.atuigu.crm.orm.Page;
+/**
+ * 
+ * Description:
+ * @author Mars Lou
+ * @date 2016年3月31日
+ */
+@RequestMapping("/contact")
+@Controller
+public class ContactHandler {
+	
+	@Autowired
+	private CustomerInfoService customerInfoService;
+	@Autowired
+	private ContactService contactService;
+	
+	/**联系人管理 
+	 * pageNo
+	 * @param id
+	 * @param pageNo
+	 * @param map
+	 * @return
+	 */
+	@RequestMapping("/list")
+	public String list(HttpServletRequest request,
+			@RequestParam(value="customerid") Integer id ,
+			@RequestParam(value="pageNo",required=false) String pageNoStr,
+			Map<String,Object> map){
+		
+		Customer customer = customerInfoService.get(id);
+		map.put("customer", customer);
+		int pageNo = 1;
+		try {
+			pageNo = Integer.parseInt(pageNoStr);
+		} catch (Exception e) {}	
+				
+		//如何能保证在分页时可以携带查询条件. 
+		//把查询条件的 params 转为查询的字符串
+		String queryString = "customerid=" + id;		
+		//把查询条件的字符串放入到 request 中
+		map.put("queryString", queryString);		
+		Page<Contact> page=contactService.getPages(id,pageNo);				
+		map.put("page", page);				
+		return "contact/list";		
+	}
+	
+	
+	/**
+	 * 转到新建/编辑页面
+	 * @param id
+	 * @param map
+	 * @return
+	 */
+	@RequestMapping(value="create")
+	public String create(@RequestParam(value="customerid") Integer id,
+			Map<String, Object> map){
+		
+		map.put("contact", new Contact());
+		
+		return "contact/input";
+	}
+	/**
+	 * 
+	 * Description:
+	 * @param contact
+	 * @param attributes
+	 * @return
+	 * @author Mars Lou
+	 * @date 2016年3月31日
+	 */
+	@RequestMapping(value="/create" ,method=RequestMethod.POST)
+	public String save(Contact contact,RedirectAttributes attributes){
+		
+		contactService.save(contact);
+		attributes.addFlashAttribute("message", "增加联系人成功!");		
+		return "redirect:/contact/list?customerid="+contact.getCustomer().getId();
+	}
+	
+	/**
+	 * 删除联系人
+	 * @param id
+	 * @param customerId
+	 * @param attributes
+	 * @return
+	 */
+	@RequestMapping(value="/delete/{id}/{customerId}", method=RequestMethod.DELETE)
+	public String delete(@PathVariable("id") Integer id,
+			@PathVariable("customerId") Integer customerId,
+			RedirectAttributes attributes){
+		contactService.delete(id);
+		attributes.addFlashAttribute("message", "删除联系人成功!");	
+		return "redirect:/contact/list?customerid="+customerId;
+	}
+	
+	/**
+	 * 转到编辑页面
+	 * @param id
+	 * @param map
+	 * @return
+	 */
+	@RequestMapping(value="/{id}/{customerId}",method=RequestMethod.GET)
+	public String edit(@PathVariable("id")Integer id,
+			@PathVariable("customerId")long customerId,
+			Map<String, Object> map){
+		
+		Contact contact=contactService.getContactById(id);
+		Customer customer=new Customer();
+		customer.setId(customerId);
+		contact.setCustomer(customer);
+		map.put("contact", contact);
+		
+		return "contact/edit";
+	}
+	/**
+	 * 修改
+	 * @param contact
+	 * @param attributes
+	 * @return
+	 */
+	@RequestMapping(value="/",method=RequestMethod.PUT)
+	public String update(Contact contact,RedirectAttributes attributes,
+			@RequestParam(value="customer.id", defaultValue="-1") Long customerId){
+		
+		contactService.update(contact);
+		attributes.addFlashAttribute("message", "更新联系人成功!");	
+		
+		return "redirect:/contact/list?customerid="+customerId;
+	}
+	
+
+}

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.atguigu.crm.mappers.CustomerServiceMapper">
+	<select id="getAllCustomerServices" resultType="com.atuigu.crm.entity.CustomerService">
+		SELECT id,allot_date as "allotDate",create_date as "createDate",deal_date as "dealDate",
+		deal_result as "dealResult",satisfy,service_deal as "serviceDeal",service_request as "serviceRequest",
+		service_state as "serviceState",service_title as "serviceTitle",service_type as "serviceType",
+		allot_id as "allotTo.id",created_id as "createby.id",customer_id as "customer.id"
+		FROM customer_services
+	</select>
+</mapper>

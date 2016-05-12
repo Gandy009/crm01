@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.atguigu.crm.mappers.DictMapper">
+	
+	<select id="getAllRegion" resultType="com.atuigu.crm.entity.Dict">
+		SELECT item FROM dicts WHERE type='地区'
+	</select>
+	
+	<select id="getAllLevel" resultType="com.atuigu.crm.entity.Dict">
+		SELECT item FROM dicts WHERE type='客户等级'
+	</select>
+	
+	<select id="getAllSatisfie" resultType="com.atuigu.crm.entity.Dict">
+		SELECT item FROM dicts WHERE type='满意度'
+	</select>
+	
+	<select id="getAllCredit" resultType="com.atuigu.crm.entity.Dict">
+		SELECT item FROM dicts WHERE type='服务类型'
+	</select>
+</mapper>

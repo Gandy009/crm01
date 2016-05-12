@@ -1,0 +1,11 @@
+package com.atguigu.crm.mappers;
+
+import org.apache.ibatis.annotations.Select;
+
+import com.atuigu.crm.entity.Role;
+
+public interface RoleMapper {
+
+	@Select("SELECT id,name FROM roles")
+	Role getById(Integer id);
+}

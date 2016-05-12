@@ -1,0 +1,11 @@
+package com.atguigu.crm.mappers;
+
+import org.apache.ibatis.annotations.Param;
+
+import com.atuigu.crm.entity.Product;
+
+
+public interface ProductMapper {
+ 
+	Product getProductById(@Param("id")Integer id);
+}

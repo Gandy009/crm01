@@ -1,0 +1,54 @@
+package com.atguigu.crm.services;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.atguigu.crm.mappers.CustomerActivityMapper;
+import com.atuigu.crm.entity.CustomerActivity;
+import com.atuigu.crm.orm.Page;
+
+@Service
+public class CustomerActivityService {
+	
+	@Autowired
+	private CustomerActivityMapper customerActivityMapper;
+
+	public Page<CustomerActivity> getPage(int pageNo, int id) {
+		Page<CustomerActivity> page = new Page<>();
+		
+		page.setPageNo(pageNo);
+		
+		long totalElements = customerActivityMapper.getTotalElements(id);
+		page.setTotalElements((int)totalElements);
+		
+		int firstIndex = (page.getPageNo() - 1) * page.getPageSize() + 1;
+		int endIndex = firstIndex + page.getPageSize();
+		
+		List<CustomerActivity> content = customerActivityMapper.getContent(id,firstIndex,endIndex);
+		page.setContent(content);
+		
+		return page;
+	}
+
+	public void save(CustomerActivity customerActivity) {
+		customerActivityMapper.save(customerActivity);
+	}
+
+	public CustomerActivity get(int id) {
+		
+		return customerActivityMapper.get(id);
+	}
+
+	public void update(CustomerActivity activity) {
+		
+		customerActivityMapper.update(activity);
+	}
+
+	public void delete(int id) {
+		
+		customerActivityMapper.delete(id);
+	}
+
+}

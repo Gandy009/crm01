@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.atguigu.crm.mappers.OrderItemMapper">
+
+	<resultMap type="com.atuigu.crm.entity.OrderItem" id="orderItemResult">
+		<id column="id" property="id"/>
+		<result column="item_count" property="count"/>
+		<result column="money" property="money"/>
+		<association property="product" column="product_id"  select="com.atguigu.crm.mappers.ProductMapper.getProductById"/> 
+	</resultMap>
+	
+	<select id="getOrderItemByOrder" resultMap="orderItemResult" >
+		select *
+		from order_items 
+		where order_id = #{id}
+	</select>
+	
+</mapper>

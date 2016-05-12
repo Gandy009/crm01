@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.atguigu.crm.mappers.AuthorityMapper">
+	
+	<resultMap type="com.atuigu.crm.entity.Authority" id="parentAuthorityResultMap">
+		<id column="id" property="id"/>
+		<result column="display_name" property="displayName"/>
+		<result column="name" property="name"/>
+		<result column="permissions" property="permissions"/>
+		<result column="url" property="url"/>
+		<collection property="subAuthorities" column="id" ofType="com.atuigu.crm.entity.Authority" select="com.atguigu.crm.mappers.AuthorityMapper.getSubAuthoritiesList"></collection>
+	</resultMap>
+	
+	<select id="getParentAuthoritiesList" resultMap="parentAuthorityResultMap">
+		select * from authorities where parent_authority_id is null
+	</select>
+	
+	<select id="getParentAuthorityBySubId" resultMap="parentAuthorityResultMap">
+		select * from authorities where id =#{parentId}
+	</select>
+	
+	<resultMap type="com.atuigu.crm.entity.Authority" id="subAuthorityResultMap">
+		<id column="id" property="id"/>
+		<result column="display_name" property="displayName"/>
+		<result column="name" property="name"/>
+		<result column="permissions" property="permissions"/>
+		<result column="url" property="url"/>
+		<collection property="parentAuthority" column="parent_authority_id" ofType="com.atuigu.crm.entity.Authority" select="com.atguigu.crm.mappers.AuthorityMapper.getParentAuthorityBySubId"/>
+	</resultMap>
+	
+	<select id="getSubAuthoritiesList" resultMap="subAuthorityResultMap">
+		select * from authorities where parent_authority_id = #{parentId}
+	</select>
+	
+	<select id="getAuthoritiesByRoleId" resultMap="subAuthorityResultMap">
+		SELECT * FROM authorities WHERE id in (SELECT authority_id FROM role_authority WHERE role_id = #{roleId})
+	</select>
+</mapper>

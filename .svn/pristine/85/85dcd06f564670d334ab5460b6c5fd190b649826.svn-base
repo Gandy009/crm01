@@ -1,0 +1,27 @@
+package com.atguigu.crm.services;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.atguigu.crm.mappers.ContactMapper;
+import com.atuigu.crm.entity.Contact;
+
+@Service
+public class ContactService {
+
+	@Autowired
+	private ContactMapper contactMapper;
+
+	public String getManagersByCustomer(Integer id) {
+		List<Contact> contacts = contactMapper.getManagersByCustomer(id);
+		for (Contact contact : contacts) {
+			if(contact != null){
+				return contact.getPosition();
+			}
+		}
+		return null;
+	}
+
+}

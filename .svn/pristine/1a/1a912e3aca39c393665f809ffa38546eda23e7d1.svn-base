@@ -1,0 +1,32 @@
+package com.atguigu.crm.handlers;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import com.atguigu.crm.services.OrderService;
+import com.atuigu.crm.entity.Order;
+
+@RequestMapping("/order")
+@Controller
+public class OrderHandler {
+	
+	@Autowired
+	private OrderService orderService;
+
+	@RequestMapping(value = "/list", method=RequestMethod.GET)
+	public String getHistoryOrderListById(@RequestParam(value = "customerid" )Integer id,Map<String,Object> map){
+		if(null!=id){
+		List<Order> list = orderService.getHistoryOrderListById(id);
+		map.put("order", list);
+		}
+		return "order/list";
+	}
+	
+	//order/list?customerid=${customer.id }
+}

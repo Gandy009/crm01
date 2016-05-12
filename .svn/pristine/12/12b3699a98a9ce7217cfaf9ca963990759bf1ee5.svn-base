@@ -1,0 +1,146 @@
+package com.atguigu.crm.services;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.atguigu.crm.mappers.CustomerDrainMapper;
+import com.atuigu.crm.entity.Contact;
+import com.atuigu.crm.entity.Customer;
+import com.atuigu.crm.entity.CustomerDrain;
+import com.atuigu.crm.orm.Page;
+import com.atuigu.crm.orm.PropertyFilter;
+
+@Service
+public class CustomerDrainService {
+
+	@Autowired
+	private CustomerDrainMapper customerDrainMapper;
+
+	@Transactional
+	public void add() {
+		customerDrainMapper.add();
+	}
+
+	/**
+	 * 
+	 * @param pageNo
+	 * @param params
+	 * @return
+	 * @author 杨博
+	 * @date 2016年4月1日
+	 */
+	@Transactional(readOnly = true)
+	public Page<CustomerDrain> getPage(int pageNo, Map<String, Object> params) {
+		Page<CustomerDrain> page = new Page<>();
+		page.setPageNo(pageNo);
+
+		Map<String, Object> mybatisParams = PropertyFilter
+				.parseRequestParams2MybatisParams(params);
+
+		int totalElements = (int) customerDrainMapper
+				.getTotalElements(mybatisParams);
+		page.setTotalElements(totalElements);
+
+		int firstIndex = (page.getPageNo() - 1) * page.getPageSize() + 1;
+		int endIndex = firstIndex + page.getPageSize();
+
+		mybatisParams.put("firstIndex", firstIndex);
+		mybatisParams.put("endIndex", endIndex);
+
+		List<CustomerDrain> content = customerDrainMapper
+				.getContent(mybatisParams);
+
+		if (content != null && content.size() > 0) {
+			for (CustomerDrain customerDrain : content) {
+				Long id = customerDrain.getCustomer().getId();
+				Customer customer = customerDrainMapper.getCustomerById(id);
+
+				Set<Contact> contacts = new HashSet<Contact>();
+				Contact contact = customerDrainMapper.getContactById(id);
+				contacts.add(contact);
+				customer.setContacts(contacts);
+
+				customerDrain.setCustomer(customer);
+			}
+		}
+
+		page.setContent(content);
+
+		return page;
+	}
+
+	/**
+	 * 
+	 * @param id
+	 * @return
+	 * @author 杨博
+	 * @date 2016年4月1日
+	 */
+	@Transactional
+	public String updateState(Integer id) {
+		return customerDrainMapper.updateState(id) + "";
+	}
+
+	/**
+	 * 
+	 * @param id
+	 * @return
+	 * @author 杨博
+	 * @date 2016年4月1日
+	 */
+	@Transactional
+	public CustomerDrain get(Integer drainId) {
+		CustomerDrain customerDrain = customerDrainMapper.getDrainById(drainId);
+
+		Long id = customerDrain.getCustomer().getId();
+		Customer customer = customerDrainMapper.getCustomerById(id);
+
+		Set<Contact> contacts = new HashSet<Contact>();
+		Contact contact = customerDrainMapper.getContactById(id);
+		contacts.add(contact);
+		customer.setContacts(contacts);
+
+		customerDrain.setCustomer(customer);
+		
+		return customerDrain;
+	}
+
+	/**
+	 * 
+	 * @param id
+	 * @author 杨博
+	 * @date 2016年4月1日
+	 */
+	@Transactional
+	public void updateDelay(CustomerDrain drain) {
+		customerDrainMapper.updateDelay(drain);
+	}
+
+	/**
+	 * 
+	 * @param drain
+	 * @author 杨博
+	 * @date 2016年4月1日
+	 */
+	@Transactional
+	public void updateReason(CustomerDrain drain) {
+		customerDrainMapper.updateReason(drain);
+	}
+
+	/**
+	 * 
+	 * @param drain
+	 * @author 杨博
+	 * @date 2016年4月1日
+	 */
+	@Transactional
+	public void updateDelay2(CustomerDrain drain) {
+		customerDrainMapper.updateDelay2(drain);
+	}
+}
